@@ -82,7 +82,10 @@ final class ImageLoadingService: Sendable {
             if Task.isCancelled { return }
             
             // Stage 5: Load Full-Quality Image (Progressive Viewer)
-            let fullImage = await Self.loadFullImage(from: file.url, targetSize: targetSize)
+            let rawFullImage = try? await FullImageWorkerPool.shared.execute {
+                await Self.loadFullImage(from: file.url, targetSize: targetSize)
+            }
+            let fullImage = rawFullImage ?? nil
 
             if Task.isCancelled { return }
             
@@ -242,6 +245,51 @@ actor ThumbnailWorkerPool {
             return
         }
         
+        await withCheckedContinuation { continuation in
+            waitingTasks.append(continuation)
+        }
+    }
+    
+    func release() {
+        if !waitingTasks.isEmpty {
+            let next = waitingTasks.removeFirst()
+            next.resume()
+        } else {
+            activeWorkers -= 1
+        }
+    }
+    
+    func execute<T: Sendable>(_ operation: @Sendable @escaping () async -> T) async throws -> T {
+        if Task.isCancelled { throw CancellationError() }
+        
+        await acquire()
+        
+        if Task.isCancelled {
+            self.release()
+            throw CancellationError()
+        }
+        
+        defer { self.release() }
+        return await operation()
+    }
+}
+
+/// Limits concurrent full-quality image decoding to prevent massive memory spikes when swiping quickly.
+actor FullImageWorkerPool {
+    static let shared = FullImageWorkerPool()
+    
+    // Only decode 1 full-size image at a time to keep peak memory strictly capped
+    private let maxConcurrentWorkers: Int = 1
+    private var activeWorkers: Int = 0
+    private var waitingTasks: [CheckedContinuation<Void, Never>] = []
+    
+    private init() {}
+    
+    func acquire() async {
+        if activeWorkers < maxConcurrentWorkers {
+            activeWorkers += 1
+            return
+        }
         await withCheckedContinuation { continuation in
             waitingTasks.append(continuation)
         }
