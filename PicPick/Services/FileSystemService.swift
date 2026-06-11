@@ -146,39 +146,91 @@ final class FileSystemService: Sendable {
         return FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir) && !isDir.boolValue
     }
 }
+import SQLite3
+
 actor USBIndexDatabase {
     static let shared = USBIndexDatabase()
-    private let fileURL: URL
+    private var db: OpaquePointer?
     
-    // In-memory cache of the index
-    private var index: [String: [ImageFile]] = [:]
+    // SQLite destructor constant for Swift
+    private let SQLITE_TRANSIENT = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_destructor_type.self)
     
     private init() {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        fileURL = appSupport.appendingPathComponent("usb_index.json")
+        let fileURL = appSupport.appendingPathComponent("usb_index.sqlite")
         
         try? FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         
-        if let data = try? Data(contentsOf: fileURL),
-           let decoded = try? JSONDecoder().decode([String: [ImageFile]].self, from: data) {
-            self.index = decoded
-        } else {
-            self.index = [:]
+        if sqlite3_open(fileURL.path, &db) == SQLITE_OK {
+            let createTableString = """
+            CREATE TABLE IF NOT EXISTS Photos(
+            Id TEXT PRIMARY KEY,
+            VolumeUUID TEXT,
+            Path TEXT,
+            FileSize INTEGER,
+            ModificationDate REAL);
+            """
+            
+            var statement: OpaquePointer?
+            if sqlite3_prepare_v2(db, createTableString, -1, &statement, nil) == SQLITE_OK {
+                sqlite3_step(statement)
+            }
+            sqlite3_finalize(statement)
         }
     }
     
-    private func saveToDisk() {
-        guard let data = try? JSONEncoder().encode(index) else { return }
-        try? data.write(to: fileURL, options: .atomic)
-    }
+    // Intentionally omitting deinit because the actor is a singleton and db is kept open
     
     func indexFiles(_ files: [ImageFile], volumeUUID: String) {
-        index[volumeUUID] = files
-        // Fire and forget save
-        Task.detached { await self.saveToDisk() }
+        sqlite3_exec(db, "BEGIN TRANSACTION", nil, nil, nil)
+        
+        let insertString = "INSERT OR REPLACE INTO Photos (Id, VolumeUUID, Path, FileSize, ModificationDate) VALUES (?, ?, ?, ?, ?);"
+        var statement: OpaquePointer?
+        
+        if sqlite3_prepare_v2(db, insertString, -1, &statement, nil) == SQLITE_OK {
+            for file in files {
+                let id = file.id as NSString
+                let vol = volumeUUID as NSString
+                let path = file.url.path as NSString
+                let size = Int64(file.fileSize)
+                let date = file.modificationDate?.timeIntervalSince1970 ?? 0
+                
+                sqlite3_bind_text(statement, 1, id.utf8String, -1, SQLITE_TRANSIENT)
+                sqlite3_bind_text(statement, 2, vol.utf8String, -1, SQLITE_TRANSIENT)
+                sqlite3_bind_text(statement, 3, path.utf8String, -1, SQLITE_TRANSIENT)
+                sqlite3_bind_int64(statement, 4, size)
+                sqlite3_bind_double(statement, 5, date)
+                
+                sqlite3_step(statement)
+                sqlite3_reset(statement)
+            }
+        }
+        sqlite3_finalize(statement)
+        sqlite3_exec(db, "COMMIT TRANSACTION", nil, nil, nil)
     }
     
     func fetchIndexedFiles(for volumeUUID: String) -> [ImageFile] {
-        return index[volumeUUID] ?? []
+        let queryString = "SELECT Id, Path, FileSize, ModificationDate FROM Photos WHERE VolumeUUID = ?;"
+        var statement: OpaquePointer?
+        var results: [ImageFile] = []
+        results.reserveCapacity(1000)
+        
+        if sqlite3_prepare_v2(db, queryString, -1, &statement, nil) == SQLITE_OK {
+            sqlite3_bind_text(statement, 1, (volumeUUID as NSString).utf8String, -1, SQLITE_TRANSIENT)
+            
+            while sqlite3_step(statement) == SQLITE_ROW {
+                guard let pathCStr = sqlite3_column_text(statement, 1) else { continue }
+                let pathStr = String(cString: pathCStr)
+                let size = sqlite3_column_int64(statement, 2)
+                let dateDouble = sqlite3_column_double(statement, 3)
+                
+                let url = URL(fileURLWithPath: pathStr)
+                let date = dateDouble > 0 ? Date(timeIntervalSince1970: dateDouble) : nil
+                
+                results.append(ImageFile(url: url, fileSize: size, modificationDate: date))
+            }
+        }
+        sqlite3_finalize(statement)
+        return results
     }
 }
