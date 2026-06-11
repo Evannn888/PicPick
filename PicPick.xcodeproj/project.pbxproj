@@ -1,0 +1,525 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		20E3224127FB0BE1180FD38A /* FileSystemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78564496C05E6B64E9243639 /* FileSystemService.swift */; };
+		2B294F33A514740B0C7627C0 /* FavoritesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B6277F19CBF99E7679CAB6 /* FavoritesViewModel.swift */; };
+		3214287E9D2716136F605D3C /* PhotoCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD4FF781365E37DF8B2BC62 /* PhotoCellView.swift */; };
+		400C9249BF697B1EAA205529 /* FavoritesViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 418C2C7A17C618E1E30C423E /* FavoritesViewModelTests.swift */; };
+		580DFBD9B731B11048B79ADA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97B66B1E78EA95D724507162 /* ContentView.swift */; };
+		5D20716DE5642C4DD52593BA /* ImageFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40676893ADE6B2A30E45295 /* ImageFile.swift */; };
+		66CB3160A7A3FDD7A18A955E /* PhotoViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C7598A462A45799DD0FCD6B /* PhotoViewer.swift */; };
+		6AB221BACB3D137EF0D9C3FA /* ImageCacheServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFD01032B846F28487236098 /* ImageCacheServiceTests.swift */; };
+		6E3C145EDC8CC67FC7FF8B27 /* ImageCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4C3C00E84D2F470C330497 /* ImageCacheService.swift */; };
+		7685145C6C1367137B07540E /* PhotoGridViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549140E6D3A3B17EFC54B26C /* PhotoGridViewModel.swift */; };
+		76FFB3DDAAA4ACC5441D241F /* PhotoPageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220CC58F9BEB25462B8A0E65 /* PhotoPageViewController.swift */; };
+		82806962FD3C98BF9FC356E2 /* ZoomableScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B190A458FDAA7D10F3013635 /* ZoomableScrollView.swift */; };
+		874800EC046134604E0F9FAD /* ImageLoadingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5A7F1FAB69AAE4FFF9FFBC1 /* ImageLoadingService.swift */; };
+		9D6C4399EE9C351DF1A9902E /* PhotoGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66D98036DDDA6C5EAC352397 /* PhotoGridView.swift */; };
+		A3D03B88B8D952CD6A6BC109 /* PhotoGridCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2725F5E17000CF360CE86651 /* PhotoGridCell.swift */; };
+		ACCFEDD7F276C46F9DD1AE4E /* PhotoViewerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25D15589F5811A4042BE7739 /* PhotoViewerViewModel.swift */; };
+		BD2188C82CF1E68DD95F9CFF /* PersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B62B9E97059E6F48A374588C /* PersistenceService.swift */; };
+		D041BFE0255FE66047327B61 /* FileSystemServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3472C8D798D4A0C981FACE31 /* FileSystemServiceTests.swift */; };
+		D191189574D25F77CF27C10F /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C23F57247B5A8CA9623145 /* ImageCache.swift */; };
+		DD18E30A01EC00E0EBA0E39C /* FavoritePhoto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 828E5578317CC631A51F7B8D /* FavoritePhoto.swift */; };
+		EDA6F4B984A7FA05BDF0B9D9 /* PhotoViewerViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F8BA82DE12C5F464E9B549 /* PhotoViewerViewModelTests.swift */; };
+		EDCAE7E0DFCF698F6A6248FE /* PicPickApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B984DBD0A43B00F4988A036B /* PicPickApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		8619E39B688A33CB92F66F7B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E73C023A2E8E90349BB4D853 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 56F028EC5144D598400136BD;
+			remoteInfo = PicPick;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		1C7598A462A45799DD0FCD6B /* PhotoViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoViewer.swift; sourceTree = "<group>"; };
+		220CC58F9BEB25462B8A0E65 /* PhotoPageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoPageViewController.swift; sourceTree = "<group>"; };
+		25D15589F5811A4042BE7739 /* PhotoViewerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoViewerViewModel.swift; sourceTree = "<group>"; };
+		2725F5E17000CF360CE86651 /* PhotoGridCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoGridCell.swift; sourceTree = "<group>"; };
+		3472C8D798D4A0C981FACE31 /* FileSystemServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSystemServiceTests.swift; sourceTree = "<group>"; };
+		418C2C7A17C618E1E30C423E /* FavoritesViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesViewModelTests.swift; sourceTree = "<group>"; };
+		549140E6D3A3B17EFC54B26C /* PhotoGridViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoGridViewModel.swift; sourceTree = "<group>"; };
+		66D98036DDDA6C5EAC352397 /* PhotoGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoGridView.swift; sourceTree = "<group>"; };
+		78564496C05E6B64E9243639 /* FileSystemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSystemService.swift; sourceTree = "<group>"; };
+		828E5578317CC631A51F7B8D /* FavoritePhoto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritePhoto.swift; sourceTree = "<group>"; };
+		97B66B1E78EA95D724507162 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		9F4C3C00E84D2F470C330497 /* ImageCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheService.swift; sourceTree = "<group>"; };
+		A1B6277F19CBF99E7679CAB6 /* FavoritesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesViewModel.swift; sourceTree = "<group>"; };
+		AFD01032B846F28487236098 /* ImageCacheServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheServiceTests.swift; sourceTree = "<group>"; };
+		B190A458FDAA7D10F3013635 /* ZoomableScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomableScrollView.swift; sourceTree = "<group>"; };
+		B62B9E97059E6F48A374588C /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
+		B984DBD0A43B00F4988A036B /* PicPickApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PicPickApp.swift; sourceTree = "<group>"; };
+		C9F8BA82DE12C5F464E9B549 /* PhotoViewerViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoViewerViewModelTests.swift; sourceTree = "<group>"; };
+		CA47B6F6DCF6F247698D05F1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		CCD4FF781365E37DF8B2BC62 /* PhotoCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoCellView.swift; sourceTree = "<group>"; };
+		DC9A2527824FEF7E6D0B47E5 /* PicPick.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PicPick.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E40676893ADE6B2A30E45295 /* ImageFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageFile.swift; sourceTree = "<group>"; };
+		E5A7F1FAB69AAE4FFF9FFBC1 /* ImageLoadingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageLoadingService.swift; sourceTree = "<group>"; };
+		F5C23F57247B5A8CA9623145 /* ImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
+		FFE2AB7CE5257AE41F98D9EB /* PicPickTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PicPickTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		5A4ADCC4286854BA7B629EC8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6F56667EF29B85493379EE2A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		2B82403264BFE44F12CF51BF /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				78564496C05E6B64E9243639 /* FileSystemService.swift */,
+				9F4C3C00E84D2F470C330497 /* ImageCacheService.swift */,
+				E5A7F1FAB69AAE4FFF9FFBC1 /* ImageLoadingService.swift */,
+				B62B9E97059E6F48A374588C /* PersistenceService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		2E96509E392E1B42A3012D1E /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Persistence;
+			sourceTree = "<group>";
+		};
+		325D4BC2C7677224838D249E /* PicPick */ = {
+			isa = PBXGroup;
+			children = (
+				34092C218A8F11CA148CFE4A /* App */,
+				77844C3078E8C9181B03A3E3 /* Models */,
+				740B91A75FE4457024AE195F /* ViewModels */,
+				A92D27121B2E98C49F612595 /* Views */,
+				2B82403264BFE44F12CF51BF /* Services */,
+				556EC2C6859314B4E564CF44 /* Cache */,
+				2E96509E392E1B42A3012D1E /* Persistence */,
+				E0AEA04092E9F2646571A950 /* Resources */,
+				CA47B6F6DCF6F247698D05F1 /* Info.plist */,
+			);
+			path = PicPick;
+			sourceTree = "<group>";
+		};
+		34092C218A8F11CA148CFE4A /* App */ = {
+			isa = PBXGroup;
+			children = (
+				B984DBD0A43B00F4988A036B /* PicPickApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		556EC2C6859314B4E564CF44 /* Cache */ = {
+			isa = PBXGroup;
+			children = (
+				F5C23F57247B5A8CA9623145 /* ImageCache.swift */,
+			);
+			path = Cache;
+			sourceTree = "<group>";
+		};
+		740B91A75FE4457024AE195F /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				549140E6D3A3B17EFC54B26C /* PhotoGridViewModel.swift */,
+				25D15589F5811A4042BE7739 /* PhotoViewerViewModel.swift */,
+				A1B6277F19CBF99E7679CAB6 /* FavoritesViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		77844C3078E8C9181B03A3E3 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				E40676893ADE6B2A30E45295 /* ImageFile.swift */,
+				828E5578317CC631A51F7B8D /* FavoritePhoto.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		8FDD3C3623ED0AD793C39380 = {
+			isa = PBXGroup;
+			children = (
+				325D4BC2C7677224838D249E /* PicPick */,
+				CF3CDD861DB938132D489F1F /* PicPickTests */,
+				C2B7868945BA4D04FDF0FD6D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A92D27121B2E98C49F612595 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				97B66B1E78EA95D724507162 /* ContentView.swift */,
+				66D98036DDDA6C5EAC352397 /* PhotoGridView.swift */,
+				2725F5E17000CF360CE86651 /* PhotoGridCell.swift */,
+				1C7598A462A45799DD0FCD6B /* PhotoViewer.swift */,
+				CCD4FF781365E37DF8B2BC62 /* PhotoCellView.swift */,
+				220CC58F9BEB25462B8A0E65 /* PhotoPageViewController.swift */,
+				B190A458FDAA7D10F3013635 /* ZoomableScrollView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		C2B7868945BA4D04FDF0FD6D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DC9A2527824FEF7E6D0B47E5 /* PicPick.app */,
+				FFE2AB7CE5257AE41F98D9EB /* PicPickTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CF3CDD861DB938132D489F1F /* PicPickTests */ = {
+			isa = PBXGroup;
+			children = (
+				3472C8D798D4A0C981FACE31 /* FileSystemServiceTests.swift */,
+				AFD01032B846F28487236098 /* ImageCacheServiceTests.swift */,
+				C9F8BA82DE12C5F464E9B549 /* PhotoViewerViewModelTests.swift */,
+				418C2C7A17C618E1E30C423E /* FavoritesViewModelTests.swift */,
+			);
+			path = PicPickTests;
+			sourceTree = "<group>";
+		};
+		E0AEA04092E9F2646571A950 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5630525A90DB5370A8945A5C /* PicPickTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 06A289FBDC32B635FF3B64CC /* Build configuration list for PBXNativeTarget "PicPickTests" */;
+			buildPhases = (
+				2F240F16D95B7A80FBE43939 /* Sources */,
+				6F56667EF29B85493379EE2A /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CE77C9204C28051C67195249 /* PBXTargetDependency */,
+			);
+			name = PicPickTests;
+			productName = PicPickTests;
+			productReference = FFE2AB7CE5257AE41F98D9EB /* PicPickTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		56F028EC5144D598400136BD /* PicPick */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2456305CE7CB10D5885D7FF5 /* Build configuration list for PBXNativeTarget "PicPick" */;
+			buildPhases = (
+				AB9B06F147D3A7E5858B3531 /* Sources */,
+				5A4ADCC4286854BA7B629EC8 /* Frameworks */,
+				9F98E31723429B6E70C54FE6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PicPick;
+			productName = PicPick;
+			productReference = DC9A2527824FEF7E6D0B47E5 /* PicPick.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E73C023A2E8E90349BB4D853 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					5630525A90DB5370A8945A5C = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = 56F028EC5144D598400136BD;
+					};
+					56F028EC5144D598400136BD = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = 2EE6DB1D43F016E2247B5982 /* Build configuration list for PBXProject "PicPick" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 8FDD3C3623ED0AD793C39380;
+			productRefGroup = C2B7868945BA4D04FDF0FD6D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				56F028EC5144D598400136BD /* PicPick */,
+				5630525A90DB5370A8945A5C /* PicPickTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9F98E31723429B6E70C54FE6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2F240F16D95B7A80FBE43939 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				D041BFE0255FE66047327B61 /* FileSystemServiceTests.swift in Sources */,
+				6AB221BACB3D137EF0D9C3FA /* ImageCacheServiceTests.swift in Sources */,
+				EDA6F4B984A7FA05BDF0B9D9 /* PhotoViewerViewModelTests.swift in Sources */,
+				400C9249BF697B1EAA205529 /* FavoritesViewModelTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB9B06F147D3A7E5858B3531 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				EDCAE7E0DFCF698F6A6248FE /* PicPickApp.swift in Sources */,
+				5D20716DE5642C4DD52593BA /* ImageFile.swift in Sources */,
+				DD18E30A01EC00E0EBA0E39C /* FavoritePhoto.swift in Sources */,
+				7685145C6C1367137B07540E /* PhotoGridViewModel.swift in Sources */,
+				ACCFEDD7F276C46F9DD1AE4E /* PhotoViewerViewModel.swift in Sources */,
+				2B294F33A514740B0C7627C0 /* FavoritesViewModel.swift in Sources */,
+				580DFBD9B731B11048B79ADA /* ContentView.swift in Sources */,
+				9D6C4399EE9C351DF1A9902E /* PhotoGridView.swift in Sources */,
+				A3D03B88B8D952CD6A6BC109 /* PhotoGridCell.swift in Sources */,
+				66CB3160A7A3FDD7A18A955E /* PhotoViewer.swift in Sources */,
+				3214287E9D2716136F605D3C /* PhotoCellView.swift in Sources */,
+				76FFB3DDAAA4ACC5441D241F /* PhotoPageViewController.swift in Sources */,
+				82806962FD3C98BF9FC356E2 /* ZoomableScrollView.swift in Sources */,
+				20E3224127FB0BE1180FD38A /* FileSystemService.swift in Sources */,
+				6E3C145EDC8CC67FC7FF8B27 /* ImageCacheService.swift in Sources */,
+				874800EC046134604E0F9FAD /* ImageLoadingService.swift in Sources */,
+				BD2188C82CF1E68DD95F9CFF /* PersistenceService.swift in Sources */,
+				D191189574D25F77CF27C10F /* ImageCache.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CE77C9204C28051C67195249 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 56F028EC5144D598400136BD /* PicPick */;
+			targetProxy = 8619E39B688A33CB92F66F7B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1B642166F20AA53958FBCBBD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_OPTIMIZATION_LEVEL = s;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		26A5518D883761D55D87B106 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = MNSNUB5U87;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PicPick/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.picpick;
+				PRODUCT_NAME = PicPick;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		9A7676760F2B89C767CE54B2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.picpick.tests;
+				PRODUCT_NAME = PicPickTests;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PicPick.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PicPick";
+			};
+			name = Release;
+		};
+		A462807A81AAA338E03FCB1D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = MNSNUB5U87;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PicPick/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.picpick;
+				PRODUCT_NAME = PicPick;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		B77673DFDB3736BD49A0EDF0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		BDEB9BDF74A62DA75E662A83 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.picpick.tests;
+				PRODUCT_NAME = PicPickTests;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PicPick.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PicPick";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		06A289FBDC32B635FF3B64CC /* Build configuration list for PBXNativeTarget "PicPickTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BDEB9BDF74A62DA75E662A83 /* Debug */,
+				9A7676760F2B89C767CE54B2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2456305CE7CB10D5885D7FF5 /* Build configuration list for PBXNativeTarget "PicPick" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				26A5518D883761D55D87B106 /* Debug */,
+				A462807A81AAA338E03FCB1D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2EE6DB1D43F016E2247B5982 /* Build configuration list for PBXProject "PicPick" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B77673DFDB3736BD49A0EDF0 /* Debug */,
+				1B642166F20AA53958FBCBBD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E73C023A2E8E90349BB4D853 /* Project object */;
+}
