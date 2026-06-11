@@ -51,7 +51,9 @@ final class ImageCacheService: Sendable {
 
     /// Store an image in the cache, keyed by the asset's localIdentifier and an optional suffix.
     func setImage(_ image: UIImage, for key: String) {
-        let cost = Int(image.size.width * image.size.height * 4) // RGBA bytes
+        let pixelWidth = image.size.width * image.scale
+        let pixelHeight = image.size.height * image.scale
+        let cost = Int(pixelWidth * pixelHeight * 4) // RGBA bytes in actual pixels
         cache.setObject(image, forKey: key as NSString, cost: cost)
     }
 

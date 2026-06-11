@@ -1,10 +1,16 @@
 import SwiftUI
 
+/// Lightweight wrapper to avoid making `Int` globally `Identifiable`.
+struct PhotoIndex: Identifiable, Equatable {
+    let id: Int
+    init(_ index: Int) { self.id = index }
+}
+
 /// Root view of PicPick. Handles grid ↔ viewer transitions.
 struct ContentView: View {
     @Environment(PhotoGridViewModel.self) private var gridViewModel
 
-    @State private var selectedPhotoIndex: Int?
+    @State private var selectedPhotoIndex: PhotoIndex?
     @State private var viewerViewModel: PhotoViewerViewModel?
     @State private var showPickerOnEmpty = false
 
@@ -12,13 +18,13 @@ struct ContentView: View {
         NavigationStack {
             ZStack {
                 PhotoGridView(onPhotoTap: { index in
-                    selectedPhotoIndex = index
+                    selectedPhotoIndex = PhotoIndex(index)
                 })
                 .navigationTitle("PicPick")
                 .navigationBarTitleDisplayMode(.large)
             }
-            .fullScreenCover(item: $selectedPhotoIndex) { index in
-                viewerView(for: index)
+            .fullScreenCover(item: $selectedPhotoIndex) { photoIndex in
+                viewerView(for: photoIndex.id)
             }
         }
         .task {
@@ -56,6 +62,3 @@ struct ContentView: View {
     }
 }
 
-extension Int: @retroactive Identifiable {
-    public var id: Int { self }
-}

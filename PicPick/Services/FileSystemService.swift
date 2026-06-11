@@ -97,11 +97,16 @@ final class FileSystemService: Sendable {
 
     // MARK: - Off-main-actor Helpers
 
+    /// Resource keys to prefetch during directory enumeration to avoid per-file stat() calls.
+    nonisolated private static let prefetchKeys: [URLResourceKey] = [
+        .fileSizeKey, .contentModificationDateKey,
+    ]
+
     nonisolated private static func enumerateDirectory(_ url: URL) -> [ImageFile] {
         let fm = FileManager.default
         guard let enumerator = fm.enumerator(
             at: url,
-            includingPropertiesForKeys: nil,
+            includingPropertiesForKeys: prefetchKeys,
             options: [.skipsHiddenFiles, .skipsPackageDescendants]
         ) else { return [] }
 
@@ -112,7 +117,8 @@ final class FileSystemService: Sendable {
         for case let fileURL as URL in enumerator {
             guard results.count < maxFiles else { break }
             guard isImageFile(fileURL) else { continue }
-            results.append(ImageFile(url: fileURL))
+            let resourceValues = try? fileURL.resourceValues(forKeys: Set(prefetchKeys))
+            results.append(ImageFile(url: fileURL, prefetchedResourceValues: resourceValues))
         }
         return results
     }

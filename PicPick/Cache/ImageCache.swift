@@ -36,7 +36,9 @@ final class ImageCache: @unchecked Sendable {
     }
 
     func setImage(_ image: UIImage, for key: String) {
-        let cost = Int(image.size.width * image.size.height * 4)
+        let pixelWidth = image.size.width * image.scale
+        let pixelHeight = image.size.height * image.scale
+        let cost = Int(pixelWidth * pixelHeight * 4) // RGBA bytes in actual pixels
         storage.setObject(image, forKey: key as NSString, cost: cost)
     }
 

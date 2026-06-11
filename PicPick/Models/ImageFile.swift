@@ -32,11 +32,16 @@ struct ImageFile: Identifiable, Hashable, Sendable {
     // MARK: - Init
 
     init(url: URL) {
+        let resourceValues = (try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey]))
+        self.init(url: url, prefetchedResourceValues: resourceValues)
+    }
+
+    /// Preferred initializer when resource values have already been fetched (e.g. by
+    /// the directory enumerator's `includingPropertiesForKeys`), avoiding a redundant stat().
+    init(url: URL, prefetchedResourceValues resourceValues: URLResourceValues?) {
         self.id = url.absoluteString
         self.url = url
         self.fileName = url.lastPathComponent
-
-        let resourceValues = (try? url.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey]))
         self.fileSize = Int64(resourceValues?.fileSize ?? 0)
         self.modificationDate = resourceValues?.contentModificationDate
 

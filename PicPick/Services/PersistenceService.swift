@@ -42,13 +42,7 @@ final class PersistenceService: Sendable {
 
     var hasLaunchedBefore: Bool {
         get { defaults.bool(forKey: Key.hasLaunchedBefore.rawValue) }
-        set {
-            defaults.set(newValue, forKey: Key.hasLaunchedBefore.rawValue)
-            // Ensure we sync immediately on first launch
-            if !newValue {
-                defaults.set(true, forKey: Key.hasLaunchedBefore.rawValue)
-            }
-        }
+        set { defaults.set(newValue, forKey: Key.hasLaunchedBefore.rawValue) }
     }
 
     // MARK: - Utilities

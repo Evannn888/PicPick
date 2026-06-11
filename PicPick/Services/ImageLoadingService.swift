@@ -74,9 +74,13 @@ final class ImageLoadingService: Sendable {
 
     /// Prefetch images into the in-memory cache.
     func startPrefetching(files: [ImageFile], targetSize: CGSize) {
-        Task.detached(priority: .utility) { [weak self] in
+        // Cancel any previously running prefetch work
+        cancelPrefetching()
+
+        let task = Task.detached(priority: .utility) { [weak self] in
             guard let self else { return }
             for file in files {
+                guard !Task.isCancelled else { break }
                 let thumb = Self.loadThumbnail(from: file.url, targetSize: targetSize)
                 guard let thumb else { continue }
                 await MainActor.run { [weak self] in
@@ -84,12 +88,23 @@ final class ImageLoadingService: Sendable {
                 }
             }
         }
+        activePrefetchTasks.append(task)
     }
 
     func stopPrefetching(files: [ImageFile], targetSize: CGSize) {
-        // Prefetching is fire-and-forget; no-op for cancellation.
-        // Individual tasks can be cancelled via Task handle if needed.
+        cancelPrefetching()
     }
+
+    /// Cancel all outstanding prefetch tasks.
+    private func cancelPrefetching() {
+        for task in activePrefetchTasks {
+            task.cancel()
+        }
+        activePrefetchTasks.removeAll()
+    }
+
+    /// Tracks outstanding prefetch tasks so they can be cancelled.
+    private var activePrefetchTasks: [Task<Void, Never>] = []
 
     // MARK: - Static Helpers (nonisolated, pure file I/O)
 
@@ -97,7 +112,7 @@ final class ImageLoadingService: Sendable {
     nonisolated static func loadThumbnail(from url: URL, targetSize: CGSize) -> UIImage? {
         // Try CGImageSource fast path first
         if let source = CGImageSourceCreateWithURL(url as CFURL, nil) {
-            let maxDimension = max(targetSize.width, targetSize.height) * 2.0
+            let maxDimension = max(targetSize.width, targetSize.height)
             let options: [CFString: Any] = [
                 kCGImageSourceCreateThumbnailFromImageAlways: true,
                 kCGImageSourceCreateThumbnailWithTransform: true,

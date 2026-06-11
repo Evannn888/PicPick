@@ -116,9 +116,7 @@ struct PhotoViewer: View {
         targetSize: CGSize,
         completion: @escaping @Sendable (UIImage?) -> Void
     ) {
-        let loadingService = ImageLoadingService()
-
-        loadingService.loadImage(for: file, targetSize: targetSize, onStage: { stage in
+        viewModel.imageLoadingService.loadImage(for: file, targetSize: targetSize, onStage: { stage in
             switch stage {
             case .cached(let image), .thumbnail(let image):
                 completion(image)

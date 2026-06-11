@@ -54,9 +54,11 @@ struct PhotoGridCell: View {
                 return
             }
 
-            // Load thumbnail from disk
+            // Load thumbnail from disk with screen-scale-aware target size
+            let scale = UIScreen.main.scale
+            let pixelSize = CGSize(width: cellSize.width * scale, height: cellSize.height * scale)
             let thumb = await Task.detached(priority: .medium) {
-                ImageLoadingService.loadThumbnail(from: file.url, targetSize: cellSize)
+                ImageLoadingService.loadThumbnail(from: file.url, targetSize: pixelSize)
             }.value
 
             guard !Task.isCancelled, let thumb else { return }

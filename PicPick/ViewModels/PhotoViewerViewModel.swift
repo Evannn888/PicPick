@@ -30,7 +30,7 @@ final class PhotoViewerViewModel {
     // MARK: - Dependencies
 
     private let persistenceService: PersistenceService
-    private let imageLoadingService: ImageLoadingService
+    let imageLoadingService: ImageLoadingService
 
     // MARK: - Init
 
