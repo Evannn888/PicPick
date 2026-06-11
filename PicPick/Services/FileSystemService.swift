@@ -87,7 +87,6 @@ final class FileSystemService: Sendable {
                 }
 
                 var batch: [ImageFile] = []
-                var allFiles: [ImageFile] = []
                 batch.reserveCapacity(100)
 
                 for case let fileURL as URL in enumerator {
@@ -98,10 +97,10 @@ final class FileSystemService: Sendable {
                     let file = ImageFile(url: fileURL, fileSize: Int64(values?.fileSize ?? 0), modificationDate: values?.contentModificationDate)
                     
                     batch.append(file)
-                    allFiles.append(file)
 
                     if batch.count >= 100 {
                         continuation.yield(batch)
+                        await USBIndexDatabase.shared.indexFiles(batch, volumeUUID: volumeUUID)
                         batch = []
                         await Task.yield()
                     }
@@ -109,11 +108,7 @@ final class FileSystemService: Sendable {
 
                 if !batch.isEmpty && !Task.isCancelled {
                     continuation.yield(batch)
-                }
-                
-                // 3. Save to database for next time
-                if !Task.isCancelled {
-                    await USBIndexDatabase.shared.indexFiles(allFiles, volumeUUID: volumeUUID)
+                    await USBIndexDatabase.shared.indexFiles(batch, volumeUUID: volumeUUID)
                 }
                 
                 continuation.finish()
