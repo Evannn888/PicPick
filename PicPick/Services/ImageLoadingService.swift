@@ -254,7 +254,7 @@ actor ThumbnailWorkerPool {
     
     func execute<T: Sendable>(_ operation: @Sendable @escaping () async -> T) async -> T {
         await acquire()
-        defer { Task { await release() } }
+        defer { Task { self.release() } }
         return await operation()
     }
 }
