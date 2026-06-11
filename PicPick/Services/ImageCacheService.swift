@@ -81,3 +81,90 @@ final class ImageCacheService: Sendable {
         }
     }
 }
+
+import CryptoKit
+
+actor ThumbnailDiskCache {
+    static let shared = ThumbnailDiskCache()
+    
+    private let cacheDirectory: URL
+    private let maxCacheSize: Int64 = 1_000_000_000 // 1 GB
+    
+    private init() {
+        let paths = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)
+        cacheDirectory = paths[0].appendingPathComponent("ThumbnailCache", isDirectory: true)
+        
+        if !FileManager.default.fileExists(atPath: cacheDirectory.path) {
+            try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+        }
+    }
+    
+    /// Generates a unique cache key based on file path, size, and modification date to prevent stale caches
+    func cacheKey(for url: URL, fileSize: Int64?, creationDate: Date?) -> String {
+        let path = url.path
+        let sizeString = fileSize.map { String($0) } ?? "0"
+        let dateString = creationDate.map { String($0.timeIntervalSince1970) } ?? "0"
+        
+        let combinedString = "\(path)_\(sizeString)_\(dateString)"
+        let hash = SHA256.hash(data: Data(combinedString.utf8))
+        return hash.compactMap { String(format: "%02x", $0) }.joined()
+    }
+    
+    func image(forKey key: String) -> UIImage? {
+        var fileURL = cacheDirectory.appendingPathComponent(key)
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return nil }
+        
+        // Update access date for LRU
+        try? fileURL.setResourceValues({
+            var values = URLResourceValues()
+            values.contentAccessDate = Date()
+            return values
+        }())
+        
+        return UIImage(contentsOfFile: fileURL.path)
+    }
+    
+    func storeImage(_ image: UIImage, forKey key: String) {
+        let fileURL = cacheDirectory.appendingPathComponent(key)
+        guard let data = image.jpegData(compressionQuality: 0.75) else { return }
+        
+        do {
+            try data.write(to: fileURL)
+            Task { self.enforceSizeLimit() }
+        } catch {
+            print("Failed to write to disk cache: \(error)")
+        }
+    }
+    
+    private func enforceSizeLimit() {
+        let keys: [URLResourceKey] = [.fileSizeKey, .contentAccessDateKey]
+        guard let enumerator = FileManager.default.enumerator(
+            at: cacheDirectory,
+            includingPropertiesForKeys: keys,
+            options: .skipsHiddenFiles
+        ) else { return }
+        
+        var totalSize: Int64 = 0
+        var files: [(url: URL, size: Int64, accessDate: Date)] = []
+        
+        for case let url as URL in enumerator {
+            guard let values = try? url.resourceValues(forKeys: Set(keys)),
+                  let fileSize = values.fileSize,
+                  let accessDate = values.contentAccessDate else { continue }
+            
+            let size = Int64(fileSize)
+            totalSize += size
+            files.append((url: url, size: size, accessDate: accessDate))
+        }
+        
+        if totalSize > maxCacheSize {
+            files.sort { $0.accessDate < $1.accessDate }
+            var currentSize = totalSize
+            for file in files {
+                if currentSize <= maxCacheSize { break }
+                try? FileManager.default.removeItem(at: file.url)
+                currentSize -= file.size
+            }
+        }
+    }
+}

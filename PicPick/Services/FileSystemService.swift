@@ -34,59 +34,96 @@ final class FileSystemService: Sendable {
 
     // MARK: - Public API
 
-    /// Scan the Documents directory (always accessible).
+    /// Import logic removed in favor of streaming directly from the USB drive.
+    /// This keeps the app fast and prevents filling up internal storage.
     func scanDocumentsDirectory() async {
-        isLoading = true
-        errorMessage = nil
+        // Fallback for empty state
+    }
 
-        let dir = docsDir  // capture before crossing actor boundary
-        let files = await Task.detached(priority: .userInitiated) {
-            Self.enumerateDirectory(dir)
-        }.value
+    private var activeDirectoryURL: URL?
 
-        imageFiles = files.sorted {
-            ($0.modificationDate ?? .distantPast) > ($1.modificationDate ?? .distantPast)
-        }
-        isLoading = false
-        onFilesDidChange?()
-
-        if imageFiles.isEmpty {
-            errorMessage = "No images found. Pick a folder or import photos."
+    /// Sets the active directory and maintains security-scoped access for USB drives.
+    func setActiveDirectory(_ url: URL?) {
+        activeDirectoryURL?.stopAccessingSecurityScopedResource()
+        activeDirectoryURL = nil
+        
+        if let url = url, url.startAccessingSecurityScopedResource() {
+            activeDirectoryURL = url
         }
     }
 
-    /// Copy images from a user-picked folder into Documents, then scan.
-    func importFromUserDirectory(_ url: URL) async {
-        guard url.startAccessingSecurityScopedResource() else {
-            errorMessage = "Cannot access this directory."
-            return
-        }
-        defer { url.stopAccessingSecurityScopedResource() }
+    nonisolated func streamPhotos(directory url: URL) -> AsyncStream<[ImageFile]> {
+        AsyncStream { continuation in
+            Task.detached(priority: .userInitiated) {
+                // Get volume UUID or fallback to URL string if missing
+                let resourceValues = try? url.resourceValues(forKeys: [.volumeIdentifierKey])
+                let volumeUUID = (resourceValues?.volumeIdentifier as? String) ?? url.absoluteString
+                
+                // 1. Check Database Index
+                let cachedFiles = await USBIndexDatabase.shared.fetchIndexedFiles(for: volumeUUID)
+                if !cachedFiles.isEmpty {
+                    let chunkSize = 100
+                    var current = 0
+                    while current < cachedFiles.count {
+                        if Task.isCancelled { break }
+                        let end = min(current + chunkSize, cachedFiles.count)
+                        continuation.yield(Array(cachedFiles[current..<end]))
+                        current = end
+                        await Task.yield()
+                    }
+                    continuation.finish()
+                    return
+                }
 
-        isLoading = true
-        errorMessage = nil
+                // 2. Perform File System Scan
+                let fm = FileManager.default
+                guard let enumerator = fm.enumerator(
+                    at: url,
+                    includingPropertiesForKeys: Self.prefetchKeys,
+                    options: [.skipsHiddenFiles, .skipsPackageDescendants]
+                ) else {
+                    continuation.finish()
+                    return
+                }
 
-        let sourceURL = url
-        let destDir = docsDir
+                var batch: [ImageFile] = []
+                var allFiles: [ImageFile] = []
+                batch.reserveCapacity(100)
 
-        let count = await Task.detached(priority: .userInitiated) {
-            Self.copyImages(from: sourceURL, to: destDir)
-        }.value
+                for case let fileURL as URL in enumerator {
+                    if Task.isCancelled { break }
+                    guard Self.isImageFile(fileURL) else { continue }
+                    
+                    let values = try? fileURL.resourceValues(forKeys: Set(Self.prefetchKeys))
+                    let file = ImageFile(url: fileURL, fileSize: Int64(values?.fileSize ?? 0), modificationDate: values?.contentModificationDate)
+                    
+                    batch.append(file)
+                    allFiles.append(file)
 
-        await scanDocumentsDirectory()
+                    if batch.count >= 100 {
+                        continuation.yield(batch)
+                        batch = []
+                        await Task.yield()
+                    }
+                }
 
-        if count == 0 {
-            errorMessage = "No compatible images found in that folder."
+                if !batch.isEmpty && !Task.isCancelled {
+                    continuation.yield(batch)
+                }
+                
+                // 3. Save to database for next time
+                if !Task.isCancelled {
+                    await USBIndexDatabase.shared.indexFiles(allFiles, volumeUUID: volumeUUID)
+                }
+                
+                continuation.finish()
+            }
         }
     }
 
     /// Delete all imported files and reset state.
     func reset() {
-        if let contents = try? FileManager.default.contentsOfDirectory(at: docsDir, includingPropertiesForKeys: nil) {
-            for url in contents where Self.isImageFile(url) {
-                try? FileManager.default.removeItem(at: url)
-            }
-        }
+        setActiveDirectory(nil)
         imageFiles = []
         errorMessage = nil
     }
@@ -99,64 +136,49 @@ final class FileSystemService: Sendable {
 
     /// Resource keys to prefetch during directory enumeration to avoid per-file stat() calls.
     nonisolated private static let prefetchKeys: [URLResourceKey] = [
-        .fileSizeKey, .contentModificationDateKey,
+        .fileSizeKey, .contentModificationDateKey, .volumeIdentifierKey
     ]
-
-    nonisolated private static func enumerateDirectory(_ url: URL) -> [ImageFile] {
-        let fm = FileManager.default
-        guard let enumerator = fm.enumerator(
-            at: url,
-            includingPropertiesForKeys: prefetchKeys,
-            options: [.skipsHiddenFiles, .skipsPackageDescendants]
-        ) else { return [] }
-
-        var results: [ImageFile] = []
-        results.reserveCapacity(1000)
-        let maxFiles = 200_000
-
-        for case let fileURL as URL in enumerator {
-            guard results.count < maxFiles else { break }
-            guard isImageFile(fileURL) else { continue }
-            let resourceValues = try? fileURL.resourceValues(forKeys: Set(prefetchKeys))
-            results.append(ImageFile(url: fileURL, prefetchedResourceValues: resourceValues))
-        }
-        return results
-    }
-
-    nonisolated private static func copyImages(from source: URL, to dest: URL) -> Int {
-        let fm = FileManager.default
-        guard let enumerator = fm.enumerator(
-            at: source,
-            includingPropertiesForKeys: nil,
-            options: [.skipsHiddenFiles, .skipsPackageDescendants]
-        ) else { return 0 }
-
-        var copied = 0
-        let maxCopy = 10_000
-
-        for case let fileURL as URL in enumerator {
-            guard copied < maxCopy else { break }
-            guard isImageFile(fileURL) else { continue }
-
-            let destURL = dest.appendingPathComponent(fileURL.lastPathComponent)
-            // Skip if already exists
-            if fm.fileExists(atPath: destURL.path) { continue }
-
-            do {
-                try fm.copyItem(at: fileURL, to: destURL)
-                copied += 1
-            } catch {
-                // Skip files that can't be copied
-            }
-        }
-        return copied
-    }
-
+    
     nonisolated private static func isImageFile(_ url: URL) -> Bool {
         let ext = url.pathExtension.lowercased()
         guard supportedExtensions.contains(ext) else { return false }
-        // Filter out directories (e.g. folders named "photos.jpg")
         var isDir: ObjCBool = false
         return FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir) && !isDir.boolValue
+    }
+}
+actor USBIndexDatabase {
+    static let shared = USBIndexDatabase()
+    private let fileURL: URL
+    
+    // In-memory cache of the index
+    private var index: [String: [ImageFile]] = [:]
+    
+    private init() {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        fileURL = appSupport.appendingPathComponent("usb_index.json")
+        
+        try? FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        
+        if let data = try? Data(contentsOf: fileURL),
+           let decoded = try? JSONDecoder().decode([String: [ImageFile]].self, from: data) {
+            self.index = decoded
+        } else {
+            self.index = [:]
+        }
+    }
+    
+    private func saveToDisk() {
+        guard let data = try? JSONEncoder().encode(index) else { return }
+        try? data.write(to: fileURL, options: .atomic)
+    }
+    
+    func indexFiles(_ files: [ImageFile], volumeUUID: String) {
+        index[volumeUUID] = files
+        // Fire and forget save
+        Task.detached { await self.saveToDisk() }
+    }
+    
+    func fetchIndexedFiles(for volumeUUID: String) -> [ImageFile] {
+        return index[volumeUUID] ?? []
     }
 }

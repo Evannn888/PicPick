@@ -2,12 +2,16 @@ import Foundation
 import ImageIO
 
 /// A file-system–based image. Pixel dimensions are resolved lazily to avoid I/O during scanning.
-struct ImageFile: Identifiable, Hashable, Sendable {
+struct ImageFile: Identifiable, Hashable, Sendable, Codable {
     let id: String
     let url: URL
     let fileName: String
     let fileSize: Int64
     let modificationDate: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id, url, fileName, fileSize, modificationDate
+    }
 
     /// Lazily cached pixel dimensions (uses OS fast header read).
     private var _pixelWidth: Int??
@@ -46,6 +50,17 @@ struct ImageFile: Identifiable, Hashable, Sendable {
         self.modificationDate = resourceValues?.contentModificationDate
 
         // Defer dimension reads — expensive I/O, not needed for grid display.
+        self._pixelWidth = nil
+        self._pixelHeight = nil
+    }
+
+    /// Initializer used when rebuilding from the SQLite index.
+    init(url: URL, fileSize: Int64, modificationDate: Date?) {
+        self.id = url.absoluteString
+        self.url = url
+        self.fileName = url.lastPathComponent
+        self.fileSize = fileSize
+        self.modificationDate = modificationDate
         self._pixelWidth = nil
         self._pixelHeight = nil
     }

@@ -33,6 +33,11 @@ struct PhotoGridView: View {
                                     onFavoriteToggle: { viewModel.toggleFavorite(file.id) }
                                 )
                                 .id(index)
+                                .onAppear {
+                                    let scale = UIScreen.main.scale
+                                    let pixelSize = CGSize(width: cellSize * scale, height: cellSize * scale)
+                                    viewModel.onItemAppear(index: index, targetSize: pixelSize)
+                                }
                             }
                         }
                     }

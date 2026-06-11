@@ -13,6 +13,8 @@ final class ImageLoadingService: Sendable {
 
     // MARK: - Dependencies
 
+    static let shared = ImageLoadingService()
+
     private let cacheService: ImageCacheService
 
     // MARK: - Types
@@ -39,7 +41,7 @@ final class ImageLoadingService: Sendable {
     ) {
         let identifier = file.id
 
-        // Stage 1: Check in-memory cache
+        // Stage 1: Check Memory Cache
         if let full = cacheService.image(for: fullQualityKey(for: identifier)) {
             onStage(.cached(full))
             return
@@ -47,21 +49,37 @@ final class ImageLoadingService: Sendable {
 
         if let thumb = cacheService.image(for: thumbnailKey(for: identifier)) {
             onStage(.cached(thumb))
+            // Only proceed if we want full quality after thumbnail
         }
 
-        // Stage 2: Load thumbnail via CGImageSource (fast)
         Task.detached(priority: .userInitiated) { [weak self] in
             guard let self else { return }
 
-            let thumbImage = Self.loadThumbnail(from: file.url, targetSize: targetSize)
+            // Calculate disk cache key
+            let fileSize = file.fileSize
+            let diskKey = await ThumbnailDiskCache.shared.cacheKey(for: file.url, fileSize: fileSize, creationDate: file.modificationDate)
 
-            await MainActor.run { [weak self] in
-                guard let self, let thumbImage else { return }
-                self.cacheService.setImage(thumbImage, for: self.thumbnailKey(for: identifier))
-                onStage(.thumbnail(thumbImage))
+            // Stage 2: Check Disk Cache
+            if let diskThumb = await ThumbnailDiskCache.shared.image(forKey: diskKey) {
+                await MainActor.run { [weak self] in
+                    self?.cacheService.setImage(diskThumb, for: self?.thumbnailKey(for: identifier) ?? "")
+                    onStage(.thumbnail(diskThumb))
+                }
+            } else {
+                // Stage 3 & 4: Load EXIF or Generate Thumbnail via Worker Pool
+                let thumbImage = await ThumbnailWorkerPool.shared.execute {
+                    Self.loadThumbnailPipeline(from: file.url, targetSize: targetSize, diskKey: diskKey)
+                }
+
+                if let thumbImage {
+                    await MainActor.run { [weak self] in
+                        self?.cacheService.setImage(thumbImage, for: self?.thumbnailKey(for: identifier) ?? "")
+                        onStage(.thumbnail(thumbImage))
+                    }
+                }
             }
 
-            // Stage 3: Load full-quality image
+            // Stage 5: Load Full-Quality Image (Progressive Viewer)
             let fullImage = await Self.loadFullImage(from: file.url, targetSize: targetSize)
 
             await MainActor.run { [weak self] in
@@ -72,19 +90,39 @@ final class ImageLoadingService: Sendable {
         }
     }
 
-    /// Prefetch images into the in-memory cache.
+    /// Prefetch images into the cache.
     func startPrefetching(files: [ImageFile], targetSize: CGSize) {
-        // Cancel any previously running prefetch work
         cancelPrefetching()
 
         let task = Task.detached(priority: .utility) { [weak self] in
             guard let self else { return }
             for file in files {
                 guard !Task.isCancelled else { break }
-                let thumb = Self.loadThumbnail(from: file.url, targetSize: targetSize)
+                
+                let fileSize = file.fileSize
+                let diskKey = await ThumbnailDiskCache.shared.cacheKey(for: file.url, fileSize: fileSize, creationDate: file.modificationDate)
+                
+                // If it's already in memory, skip
+                let memKey = await MainActor.run { self.thumbnailKey(for: file.id) }
+                let hasMemCache = await MainActor.run { self.cacheService.image(for: memKey) != nil }
+                if hasMemCache { continue }
+                
+                // If it's already on disk, load it into memory
+                if let diskThumb = await ThumbnailDiskCache.shared.image(forKey: diskKey) {
+                    await MainActor.run { [weak self] in
+                        self?.cacheService.setImage(diskThumb, for: memKey)
+                    }
+                    continue
+                }
+                
+                // Otherwise fetch/generate using the worker pool
+                let thumb = await ThumbnailWorkerPool.shared.execute {
+                    Self.loadThumbnailPipeline(from: file.url, targetSize: targetSize, diskKey: diskKey)
+                }
+                
                 guard let thumb else { continue }
                 await MainActor.run { [weak self] in
-                    self?.cacheService.setImage(thumb, for: "\(file.id)_thumb")
+                    self?.cacheService.setImage(thumb, for: memKey)
                 }
             }
         }
@@ -95,7 +133,6 @@ final class ImageLoadingService: Sendable {
         cancelPrefetching()
     }
 
-    /// Cancel all outstanding prefetch tasks.
     private func cancelPrefetching() {
         for task in activePrefetchTasks {
             task.cancel()
@@ -103,42 +140,61 @@ final class ImageLoadingService: Sendable {
         activePrefetchTasks.removeAll()
     }
 
-    /// Tracks outstanding prefetch tasks so they can be cancelled.
     private var activePrefetchTasks: [Task<Void, Never>] = []
 
-    // MARK: - Static Helpers (nonisolated, pure file I/O)
+    // MARK: - Pipeline Helpers
 
-    /// Load a downsized thumbnail using CGImageSource, with UIImage fallback.
-    nonisolated static func loadThumbnail(from url: URL, targetSize: CGSize) -> UIImage? {
-        // Try CGImageSource fast path first
-        if let source = CGImageSourceCreateWithURL(url as CFURL, nil) {
-            let maxDimension = max(targetSize.width, targetSize.height)
-            let options: [CFString: Any] = [
-                kCGImageSourceCreateThumbnailFromImageAlways: true,
-                kCGImageSourceCreateThumbnailWithTransform: true,
-                kCGImageSourceThumbnailMaxPixelSize: maxDimension,
-                kCGImageSourceShouldCacheImmediately: true,
-            ]
-            if let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) {
-                return UIImage(cgImage: cgImage)
-            }
+    /// Public endpoint for views (like PhotoGridCell) to fetch a thumbnail through the disk -> exif -> gen pipeline.
+    nonisolated static func fetchThumbnail(for file: ImageFile, targetSize: CGSize) async -> UIImage? {
+        let fileSize = file.fileSize
+        let diskKey = await ThumbnailDiskCache.shared.cacheKey(for: file.url, fileSize: fileSize, creationDate: file.modificationDate)
+        
+        if let diskThumb = await ThumbnailDiskCache.shared.image(forKey: diskKey) {
+            return diskThumb
+        }
+        
+        return await ThumbnailWorkerPool.shared.execute {
+            Self.loadThumbnailPipeline(from: file.url, targetSize: targetSize, diskKey: diskKey)
+        }
+    }
+
+    /// Implements Stage 3 (EXIF) and Stage 4 (Generate)
+    nonisolated private static func loadThumbnailPipeline(from url: URL, targetSize: CGSize, diskKey: String) -> UIImage? {
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        
+        // Stage 3: Try to extract embedded EXIF thumbnail instantly
+        let exifOptions: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageIfAbsent: false,
+            kCGImageSourceCreateThumbnailWithTransform: true
+        ]
+        
+        if let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, exifOptions as CFDictionary) {
+            let exifThumb = UIImage(cgImage: cgImage)
+            Task { await ThumbnailDiskCache.shared.storeImage(exifThumb, forKey: diskKey) }
+            return exifThumb
+        }
+        
+        // Stage 4: Generation Fallback (max 400px as per spec)
+        let maxDimension = max(targetSize.width, targetSize.height, 400)
+        let genOptions: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxDimension
+        ]
+        
+        if let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, genOptions as CFDictionary) {
+            let generatedThumb = UIImage(cgImage: cgImage)
+            Task { await ThumbnailDiskCache.shared.storeImage(generatedThumb, forKey: diskKey) }
+            return generatedThumb
         }
 
-        // Fallback: load full image and downscale
-        guard let image = UIImage(contentsOfFile: url.path) else { return nil }
-        let scale = max(image.size.width / targetSize.width, image.size.height / targetSize.height, 1)
-        let newSize = CGSize(width: image.size.width / scale, height: image.size.height / scale)
-        return image.preparingThumbnail(of: newSize)
+        return nil
     }
 
     /// Load the full image from disk.
     nonisolated static func loadFullImage(from url: URL, targetSize: CGSize) async -> UIImage? {
-        // Use UIImage(contentsOfFile:) which decodes on access, or manually decode.
-        guard let image = UIImage(contentsOfFile: url.path) else {
-            return nil
-        }
+        guard let image = UIImage(contentsOfFile: url.path) else { return nil }
 
-        // Downsize if the image is much larger than the target
         let scale = max(
             image.size.width / targetSize.width,
             image.size.height / targetSize.height
@@ -163,5 +219,42 @@ final class ImageLoadingService: Sendable {
 
     private func fullQualityKey(for identifier: String) -> String {
         "\(identifier)_full"
+    }
+}
+
+/// Limits concurrent thumbnail generation to prevent overwhelming the CPU and USB bandwidth.
+actor ThumbnailWorkerPool {
+    static let shared = ThumbnailWorkerPool()
+    
+    private let maxConcurrentWorkers: Int = 4
+    private var activeWorkers: Int = 0
+    private var waitingTasks: [CheckedContinuation<Void, Never>] = []
+    
+    private init() {}
+    
+    func acquire() async {
+        if activeWorkers < maxConcurrentWorkers {
+            activeWorkers += 1
+            return
+        }
+        
+        await withCheckedContinuation { continuation in
+            waitingTasks.append(continuation)
+        }
+    }
+    
+    func release() {
+        if !waitingTasks.isEmpty {
+            let next = waitingTasks.removeFirst()
+            next.resume()
+        } else {
+            activeWorkers -= 1
+        }
+    }
+    
+    func execute<T: Sendable>(_ operation: @Sendable @escaping () async -> T) async -> T {
+        await acquire()
+        defer { Task { await release() } }
+        return await operation()
     }
 }

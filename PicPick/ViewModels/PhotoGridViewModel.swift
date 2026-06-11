@@ -29,24 +29,52 @@ final class PhotoGridViewModel {
 
     // MARK: - Actions
 
+    private var scanTask: Task<Void, Never>?
+
     func loadInitialDirectory() async {
-        await fileSystemService.scanDocumentsDirectory()
-        imageFiles = fileSystemService.imageFiles
+        // Fallback or previously accessed directory logic
     }
 
     func loadFromUserDirectory(_ url: URL) async {
-        await fileSystemService.importFromUserDirectory(url)
-        imageFiles = fileSystemService.imageFiles
+        scanTask?.cancel()
+        fileSystemService.setActiveDirectory(url)
+        
+        imageFiles = []
+        isLoading = true
+        errorMessage = nil
+
+        scanTask = Task { @MainActor in
+            let stream = fileSystemService.streamPhotos(directory: url)
+            
+            for await batch in stream {
+                guard !Task.isCancelled else { break }
+                imageFiles.append(contentsOf: batch)
+                // Stop showing the loading spinner as soon as we have the first batch
+                if !imageFiles.isEmpty {
+                    isLoading = false
+                }
+            }
+            
+            guard !Task.isCancelled else { return }
+            
+            // Final sort by modification date descending
+            imageFiles.sort {
+                ($0.modificationDate ?? .distantPast) > ($1.modificationDate ?? .distantPast)
+            }
+            isLoading = false
+            
+            if imageFiles.isEmpty {
+                errorMessage = "No compatible images found in that folder."
+            }
+        }
     }
 
     func reloadFromDocuments() async {
-        await fileSystemService.scanDocumentsDirectory()
-        imageFiles = fileSystemService.imageFiles
+        // Obsolete
     }
 
     func refresh() async {
-        await fileSystemService.refresh()
-        imageFiles = fileSystemService.imageFiles
+        // Could implement re-scan if needed
     }
 
     func clearAndStartFresh() {
@@ -75,5 +103,29 @@ final class PhotoGridViewModel {
 
     func favoriteFiles() -> [ImageFile] {
         imageFiles.filter { favoriteIdentifiers.contains($0.id) }
+    }
+    
+    // MARK: - Prefetching
+
+    private var lastVisibleIndex: Int = 0
+    private var scrollDirectionIsDown: Bool = true
+    
+    func onItemAppear(index: Int, targetSize: CGSize) {
+        guard !imageFiles.isEmpty, index < imageFiles.count else { return }
+        
+        // Determine scroll direction
+        scrollDirectionIsDown = index >= lastVisibleIndex
+        lastVisibleIndex = index
+        
+        let prefetchAmount = 30
+        let prefetchStart = scrollDirectionIsDown ? index + 1 : max(0, index - prefetchAmount)
+        let prefetchEnd = scrollDirectionIsDown ? min(imageFiles.count, index + prefetchAmount + 1) : index
+        
+        guard prefetchStart < prefetchEnd else { return }
+        
+        let prefetchRange = prefetchStart..<prefetchEnd
+        let filesToPrefetch = Array(imageFiles[prefetchRange])
+        
+        ImageLoadingService.shared.startPrefetching(files: filesToPrefetch, targetSize: targetSize)
     }
 }
