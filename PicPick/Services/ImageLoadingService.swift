@@ -195,24 +195,24 @@ final class ImageLoadingService: Sendable {
         return nil
     }
 
-    /// Load the full image from disk.
     nonisolated static func loadFullImage(from url: URL, targetSize: CGSize) async -> UIImage? {
-        guard let image = UIImage(contentsOfFile: url.path) else { return nil }
-
-        let scale = max(
-            image.size.width / targetSize.width,
-            image.size.height / targetSize.height
-        )
-
-        if scale > 2.0 {
-            let newSize = CGSize(
-                width: image.size.width / scale,
-                height: image.size.height / scale
-            )
-            return image.preparingThumbnail(of: newSize)
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else { return nil }
+        
+        // We want a high-quality image for fullscreen viewing, allowing up to 2x zoom without pixelation.
+        // targetSize is already in screen pixels.
+        let maxDimension = max(targetSize.width, targetSize.height) * 2.0
+        
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxDimension
+        ]
+        
+        if let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) {
+            return UIImage(cgImage: cgImage)
         }
-
-        return image
+        
+        return nil
     }
 
     // MARK: - Cache Keys
