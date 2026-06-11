@@ -67,7 +67,7 @@ final class ImageLoadingService: Sendable {
                 }
             } else {
                 // Stage 3 & 4: Load EXIF or Generate Thumbnail via Worker Pool
-                let thumbImage = await ThumbnailWorkerPool.shared.execute {
+                let thumbImage = try? await ThumbnailWorkerPool.shared.execute {
                     Self.loadThumbnailPipeline(from: file.url, targetSize: targetSize, diskKey: diskKey)
                 }
 
@@ -79,9 +79,13 @@ final class ImageLoadingService: Sendable {
                 }
             }
 
+            if Task.isCancelled { return }
+            
             // Stage 5: Load Full-Quality Image (Progressive Viewer)
             let fullImage = await Self.loadFullImage(from: file.url, targetSize: targetSize)
 
+            if Task.isCancelled { return }
+            
             await MainActor.run { [weak self] in
                 guard let self, let fullImage else { return }
                 self.cacheService.setImage(fullImage, for: self.fullQualityKey(for: identifier))
@@ -116,7 +120,7 @@ final class ImageLoadingService: Sendable {
                 }
                 
                 // Otherwise fetch/generate using the worker pool
-                let thumb = await ThumbnailWorkerPool.shared.execute {
+                let thumb = try? await ThumbnailWorkerPool.shared.execute {
                     Self.loadThumbnailPipeline(from: file.url, targetSize: targetSize, diskKey: diskKey)
                 }
                 
@@ -153,7 +157,7 @@ final class ImageLoadingService: Sendable {
             return diskThumb
         }
         
-        return await ThumbnailWorkerPool.shared.execute {
+        return try? await ThumbnailWorkerPool.shared.execute {
             Self.loadThumbnailPipeline(from: file.url, targetSize: targetSize, diskKey: diskKey)
         }
     }
@@ -252,9 +256,17 @@ actor ThumbnailWorkerPool {
         }
     }
     
-    func execute<T: Sendable>(_ operation: @Sendable @escaping () async -> T) async -> T {
+    func execute<T: Sendable>(_ operation: @Sendable @escaping () async -> T) async throws -> T {
+        if Task.isCancelled { throw CancellationError() }
+        
         await acquire()
-        defer { Task { self.release() } }
+        
+        if Task.isCancelled {
+            self.release()
+            throw CancellationError()
+        }
+        
+        defer { self.release() }
         return await operation()
     }
 }
