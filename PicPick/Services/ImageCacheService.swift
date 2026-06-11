@@ -124,13 +124,19 @@ actor ThumbnailDiskCache {
         return UIImage(contentsOfFile: fileURL.path)
     }
     
+    private var writeCountSinceLastEnforce = 0
+    
     func storeImage(_ image: UIImage, forKey key: String) {
         let fileURL = cacheDirectory.appendingPathComponent(key)
         guard let data = image.jpegData(compressionQuality: 0.75) else { return }
         
         do {
             try data.write(to: fileURL)
-            Task { self.enforceSizeLimit() }
+            writeCountSinceLastEnforce += 1
+            if writeCountSinceLastEnforce >= 100 {
+                writeCountSinceLastEnforce = 0
+                Task { self.enforceSizeLimit() }
+            }
         } catch {
             print("Failed to write to disk cache: \(error)")
         }

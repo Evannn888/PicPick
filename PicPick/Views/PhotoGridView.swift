@@ -24,7 +24,8 @@ struct PhotoGridView: View {
                 ScrollViewReader { proxy in
                     ScrollView(.vertical) {
                         LazyVGrid(columns: columns, spacing: 1) {
-                            ForEach(Array(viewModel.imageFiles.enumerated()), id: \.element.id) { index, file in
+                            ForEach(viewModel.imageFiles.indices, id: \.self) { index in
+                                let file = viewModel.imageFiles[index]
                                 PhotoGridCell(
                                     file: file,
                                     isFavorited: viewModel.favoriteIdentifiers.contains(file.id),
@@ -32,7 +33,7 @@ struct PhotoGridView: View {
                                     onTap: { onPhotoTap(index) },
                                     onFavoriteToggle: { viewModel.toggleFavorite(file.id) }
                                 )
-                                .id(index)
+                                .id(file.id)
                                 .onAppear {
                                     let scale = UIScreen.main.scale
                                     let pixelSize = CGSize(width: cellSize * scale, height: cellSize * scale)
